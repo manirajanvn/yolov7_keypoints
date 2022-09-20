@@ -20,42 +20,7 @@ model = weigths['model']
 model = model.half().to(device)
 _ = model.eval()
 
-# Commented out IPython magic to ensure Python compatibility.
-def pose_estimation(img):
-  image = cv2.imread(img)
-  image = letterbox(image, 960, stride=64, auto=True)[0]
-  image_ = image.copy()
-  print(image.shape)
-  image = transforms.ToTensor()(image)
-  image = torch.tensor(np.array([image.numpy()]))
 
-  if torch.cuda.is_available():
-      image = image.half().to(device)   
-  output, _ = model(image)
-  output = non_max_suppression_kpt(output, 0.25, 0.65, nc=model.yaml['nc'], nkpt=model.yaml['nkpt'], kpt_label=True)
-  
-  with torch.no_grad():
-      output = output_to_keypoint(output)
-      
-  nimg = image[0].permute(1, 2, 0) * 255
-  nimg = nimg.cpu().numpy().astype(np.uint8)
-  nimg = cv2.cvtColor(nimg, cv2.COLOR_RGB2BGR)
-  for idx in range(output.shape[0]):
-    plot_skeleton_kpts(nimg, output[idx, 7:].T, 3)
-    left_shoulder_y= output[idx][23]
-    right_shoulder_y= output[idx][26]
-    
-    left_foot_y = output[idx][53]
-    right_foot_y = output[idx][56]
-    
-    print(left_shoulder_y)
-    print(left_foot_y)
-    if left_shoulder_y > left_foot_y - 150:
-      print("Fell down")
-
-  cv2.imwrite("keypoint.jpg", nimg)
-
-img = './inference/images/stand.jpg'
 video_path = 'fall6.mp4'
 #pass video to videocapture object
 cap = cv2.VideoCapture(video_path)
